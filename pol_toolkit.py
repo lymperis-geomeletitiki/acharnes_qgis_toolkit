@@ -31,49 +31,16 @@ from .resources import *
 from .pol_toolkit_dockwidget import pol_toolkitDockWidget
 import os.path
 
+import sys, inspect
+cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+if cmd_folder not in sys.path:
+    sys.path.insert(0, cmd_folder)
+
 
 class pol_toolkit:
     """QGIS Plugin Implementation."""
 
-    def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-        # Save reference to the QGIS interface
-        self.iface = iface
-
-        # initialize plugin directory
-        self.plugin_dir = os.path.dirname(__file__)
-
-        # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'pol_toolkit_{}.qm'.format(locale))
-
-        if os.path.exists(locale_path):
-            self.translator = QTranslator()
-            self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
-
-        # Declare instance attributes
-        self.actions = []
-        self.menu = self.tr(u'&Poleodomia Toolkit')
-        # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'pol_toolkit')
-        self.toolbar.setObjectName(u'pol_toolkit')
-
-        #print "** INITIALIZING pol_toolkit"
-
-        self.pluginIsActive = False
-        self.dockwidget = None
-
-
+    
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -163,6 +130,44 @@ class pol_toolkit:
 
         return action
 
+    def __init__(self, iface):
+        """Constructor.
+
+        :param iface: An interface instance that will be passed to this class
+            which provides the hook by which you can manipulate the QGIS
+            application at run time.
+        :type iface: QgsInterface
+        """
+        # Save reference to the QGIS interface
+        self.iface = iface
+
+        # initialize plugin directory
+        self.plugin_dir = os.path.dirname(__file__)
+
+        # initialize locale
+        locale = QSettings().value('locale/userLocale')[0:2]
+        locale_path = os.path.join(
+            self.plugin_dir,
+            'i18n',
+            'pol_toolkit_{}.qm'.format(locale))
+
+        if os.path.exists(locale_path):
+            self.translator = QTranslator()
+            self.translator.load(locale_path)
+            QCoreApplication.installTranslator(self.translator)
+
+        # Declare instance attributes
+        self.actions = []
+        self.menu = self.tr(u'&Poleodomia Toolkit')
+        self.toolbar = self.iface.addToolBar(u'pol_toolkit')
+        self.toolbar.setObjectName(u'pol_toolkit')
+        self.pluginIsActive = False
+        self.dockwidget = None
+
+        self.settingsDialog = None
+
+
+
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
@@ -174,35 +179,37 @@ class pol_toolkit:
             callback=self.run,
             parent=self.iface.mainWindow())
 
+
+
+        #Settings Dialog
+        icon = QIcon(os.path.dirname(__file__) + "/icons/settings_gear.png")
+        self.openSettings = QAction(icon, "Select data folder (Geomeletitiki W.A.)", self.iface.mainWindow())
+        self.openSettings.triggered.connect(self.showSettingsDialog)
+        self.openSettings.setCheckable(False)
+        self.iface.addToolBarIcon(self.openSettings)
+
+
+
+
     #--------------------------------------------------------------------------
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
 
-        #print "** CLOSING pol_toolkit"
-
-        # disconnects
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
-
-        # remove this statement if dockwidget is to remain
-        # for reuse if plugin is reopened
-        # Commented next statement since it causes QGIS crashe
-        # when closing the docked window:
-        # self.dockwidget = None
-
         self.pluginIsActive = False
 
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
 
-        #print "** UNLOAD pol_toolkit"
 
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&Poleodomia Toolkit'),
                 action)
             self.iface.removeToolBarIcon(action)
+            self.iface.removeToolBarIcon(self.openSettings)
         # remove the toolbar
         del self.toolbar
 
@@ -230,3 +237,22 @@ class pol_toolkit:
             # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def showSettingsDialog(self):
+        if not self.settingsDialog:
+            from .Settings_Dialog import SettingsDialog
+            self.settingsDialog = SettingsDialog(self.iface)
+        self.settingsDialog.show()
