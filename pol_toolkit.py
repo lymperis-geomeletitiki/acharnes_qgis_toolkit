@@ -173,33 +173,37 @@ class pol_toolkit:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         #Main dock window
-        icon = QIcon(os.path.dirname(__file__) + "/icons/main.png")
-        self.mainDock = QAction(icon, "Πολεοδομία Toolkit", self.iface.mainWindow())
-        self.mainDock.triggered.connect(self.run)
-        self.mainDock.setCheckable(False)
-        self.iface.addToolBarIcon(self.mainDock)
+        icon_path = os.path.dirname(__file__) + "/icons/layers.png"
+        icon = QIcon(icon_path)
 
+        #self.mainDock = QAction(icon, "Πολεοδομία Toolkit", self.iface.mainWindow())
+        #self.mainDock.triggered.connect(self.run)
+        #self.mainDock.setCheckable(False)
+        #self.iface.addToolBarIcon(self.mainDock)
 
-        icon_path = ':/plugins/pol_toolkit/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Poleodomia Toolkit'),
             callback=self.run,
+            add_to_toolbar = True,
             parent=self.iface.mainWindow())
 
 
 
         #Settings Dialog
-        icon = QIcon(os.path.dirname(__file__) + "/icons/settings_gear.png")
-        self.openSettings = QAction(icon, "Ρυθμίσεις", self.iface.mainWindow())
-        self.openSettings.triggered.connect(self.showSettingsDialog)
-        self.openSettings.setCheckable(False)
-        self.iface.addToolBarIcon(self.openSettings)
+        icon_path = os.path.dirname(__file__) + "/icons/settings.png"
+        icon = QIcon(icon_path)
+
+        #self.openSettings = QAction(icon, "Ρυθμίσεις", self.iface.mainWindow())
+        #self.openSettings.triggered.connect(self.showSettingsDialog)
+        #self.openSettings.setCheckable(False)
+        #self.iface.addToolBarIcon(self.openSettings)
 
         self.add_action(
             icon_path,
-            text=self.tr(u'Poleodomia Toolkit'),
+            text=self.tr(u'Settings'),
             callback=self.showSettingsDialog,
+            add_to_toolbar = True,
             parent=self.iface.mainWindow())
 
 
@@ -224,9 +228,11 @@ class pol_toolkit:
                 self.tr(u'&Poleodomia Toolkit'),
                 action)
             self.iface.removeToolBarIcon(action)
-            self.iface.removeToolBarIcon(self.openSettings)
+     
         # remove the toolbar
+     
         del self.toolbar
+       
 
     #--------------------------------------------------------------------------
 
