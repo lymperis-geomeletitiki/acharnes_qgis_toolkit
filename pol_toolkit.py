@@ -24,6 +24,8 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
+from qgis.core import QgsProject
+from qgis.gui import QgsLayerTreeMapCanvasBridge
 # Initialize Qt resources from file resources.py
 from .resources import *
 
@@ -31,7 +33,8 @@ from .resources import *
 from .pol_toolkit_dockwidget import pol_toolkitDockWidget
 import os.path
 
-import sys, inspect
+import sys
+import inspect
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
@@ -40,7 +43,6 @@ if cmd_folder not in sys.path:
 class pol_toolkit:
     """QGIS Plugin Implementation."""
 
-    
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -56,18 +58,17 @@ class pol_toolkit:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('pol_toolkit', message)
 
-
     def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -159,58 +160,50 @@ class pol_toolkit:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Poleodomia Toolkit')
-        self.toolbar = self.iface.addToolBar(u'pol_toolkit')
+        self.toolbar = self.iface.addToolBar(u'Πολεοδομία Toolkit')
         self.toolbar.setObjectName(u'pol_toolkit')
         self.pluginIsActive = False
         self.dockwidget = None
 
         self.settingsDialog = None
 
-
-
-
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        #Main dock window
+        # Open Workspace
+        icon_path = os.path.dirname(__file__) + "/icons/open_workspace.png"
+        icon = QIcon(icon_path)
+
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Άνοιγμα Χώρου Εργασίας'),
+            callback=self.openWorkspace,
+            add_to_toolbar=True,
+            parent=self.iface.mainWindow())
+
+        # Main dock window
         icon_path = os.path.dirname(__file__) + "/icons/layers.png"
         icon = QIcon(icon_path)
 
-        #self.mainDock = QAction(icon, "Πολεοδομία Toolkit", self.iface.mainWindow())
-        #self.mainDock.triggered.connect(self.run)
-        #self.mainDock.setCheckable(False)
-        #self.iface.addToolBarIcon(self.mainDock)
-
         self.add_action(
             icon_path,
-            text=self.tr(u'Poleodomia Toolkit'),
+            text=self.tr(u'Toolkit'),
             callback=self.run,
-            add_to_toolbar = True,
+            add_to_toolbar=True,
             parent=self.iface.mainWindow())
 
-
-
-        #Settings Dialog
+        # Settings Dialog
         icon_path = os.path.dirname(__file__) + "/icons/settings.png"
         icon = QIcon(icon_path)
 
-        #self.openSettings = QAction(icon, "Ρυθμίσεις", self.iface.mainWindow())
-        #self.openSettings.triggered.connect(self.showSettingsDialog)
-        #self.openSettings.setCheckable(False)
-        #self.iface.addToolBarIcon(self.openSettings)
-
         self.add_action(
             icon_path,
-            text=self.tr(u'Settings'),
+            text=self.tr(u'Ρυθμίσεις'),
             callback=self.showSettingsDialog,
-            add_to_toolbar = True,
+            add_to_toolbar=True,
             parent=self.iface.mainWindow())
 
-
-
-
-
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def onClosePlugin(self):
         """Cleanup necessary items here when plugin dockwidget is closed"""
@@ -218,23 +211,20 @@ class pol_toolkit:
         self.dockwidget.closingPlugin.disconnect(self.onClosePlugin)
         self.pluginIsActive = False
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
-
 
         for action in self.actions:
             self.iface.removePluginMenu(
                 self.tr(u'&Poleodomia Toolkit'),
                 action)
             self.iface.removeToolBarIcon(action)
-     
-        # remove the toolbar
-     
-        del self.toolbar
-       
 
-    #--------------------------------------------------------------------------
+        # remove the toolbar
+
+        del self.toolbar
+
+    # --------------------------------------------------------------------------
 
     def run(self):
         """Run method that loads and starts the plugin"""
@@ -242,7 +232,7 @@ class pol_toolkit:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            #print "** STARTING pol_toolkit"
+            # print "** STARTING pol_toolkit"
 
             # dockwidget may not exist if:
             #    first run of plugin
@@ -259,18 +249,14 @@ class pol_toolkit:
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
-
-
-
-
-
-
-
-
-
-
-
-
+    def openWorkspace(self):
+        #project = QgsProject.instance()
+        #project.read(os.path.dirname(__file__) +
+        #             "/proj/poleodomia_acharnes.qgzs")
+        #for layer in project.mapLayers():
+        #    print(layer)
+        
+        self.iface.addProject(os.path.dirname(__file__) + "/proj/poleodomia_acharnes.qgz")
 
     def showSettingsDialog(self):
         if not self.settingsDialog:
