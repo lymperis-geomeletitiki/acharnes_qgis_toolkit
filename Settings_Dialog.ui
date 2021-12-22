@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SettingsDialog</class>
+ <class>Settings_Dialog</class>
  <widget class="QDialog" name="Settings_Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>564</width>
-    <height>155</height>
+    <width>484</width>
+    <height>650</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>300</width>
+    <height>650</height>
+   </size>
   </property>
   <property name="focusPolicy">
    <enum>Qt::NoFocus</enum>
@@ -17,92 +23,295 @@
    <bool>false</bool>
   </property>
   <property name="windowTitle">
-   <string>Data Folder Settings</string>
+   <string>Ρυθμίσεις</string>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>230</x>
-     <y>120</y>
-     <width>81</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>20</y>
-     <width>101</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>10</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Corine Folder:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>70</y>
-     <width>121</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>9</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>SCS(edafmap) Folder:</string>
-   </property>
-  </widget>
-  <widget class="QgsFileWidget" name="corine_dialog">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>40</y>
-     <width>541</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="fullUrl">
-    <bool>true</bool>
-   </property>
-   <property name="storageMode">
-    <enum>QgsFileWidget::GetDirectory</enum>
-   </property>
-  </widget>
-  <widget class="QgsFileWidget" name="scs_dialog">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>90</y>
-     <width>541</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="fullUrl">
-    <bool>true</bool>
-   </property>
-   <property name="storageMode">
-    <enum>QgsFileWidget::GetDirectory</enum>
-   </property>
-  </widget>
+  <layout class="QGridLayout" name="gridLayout_5">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="1" column="0">
+      <widget class="QDialogButtonBox" name="accept_button">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QTabWidget" name="tabWidget_3">
+       <property name="locale">
+        <locale language="Greek" country="Greece"/>
+       </property>
+       <property name="currentIndex">
+        <number>1</number>
+       </property>
+       <widget class="QWidget" name="general_settings_tab">
+        <property name="locale">
+         <locale language="Greek" country="Greece"/>
+        </property>
+        <attribute name="title">
+         <string>Γενικά</string>
+        </attribute>
+        <widget class="QLabel" name="label_4">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>60</y>
+           <width>121</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>9</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>SCS(edafmap) Folder:</string>
+         </property>
+        </widget>
+        <widget class="QLabel" name="dataFolderLabel_3">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>101</width>
+           <height>16</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Φάκελος Αρχείων:</string>
+         </property>
+        </widget>
+        <widget class="QgsFileWidget" name="dataFolderDialog_3">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>30</y>
+           <width>431</width>
+           <height>27</height>
+          </rect>
+         </property>
+         <property name="fullUrl">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="db_settings_tab">
+        <attribute name="title">
+         <string>Βάση Δεδομένων</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="0" column="0">
+          <widget class="QWidget" name="widget" native="true">
+           <layout class="QGridLayout" name="gridLayout_17">
+            <item row="0" column="0">
+             <widget class="QGroupBox" name="groupBox">
+              <property name="title">
+               <string/>
+              </property>
+              <layout class="QGridLayout" name="gridLayout">
+               <item row="0" column="0">
+                <layout class="QGridLayout" name="gridLayout_9">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="dataFolderLabel_4">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Γεωμετρίες: </string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label">
+                   <property name="text">
+                    <string>Host</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLineEdit" name="geom_db_host"/>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_8">
+                   <property name="text">
+                    <string>Όνομα Βάσης</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLineEdit" name="geom_db_name">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="0">
+                  <widget class="QGroupBox" name="groupBox_2">
+                   <property name="title">
+                    <string/>
+                   </property>
+                   <layout class="QGridLayout" name="gridLayout_8">
+                    <item row="1" column="0">
+                     <layout class="QGridLayout" name="gridLayout_7">
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label_6">
+                        <property name="text">
+                         <string>Χρήστης</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_7">
+                        <property name="text">
+                         <string>Κωδικός</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="2">
+                       <widget class="QLineEdit" name="geom_db_user"/>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QgsPasswordLineEdit" name="geom_db_passw"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_5">
+                      <property name="text">
+                       <string>Διαπιστευτήρια</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QWidget" name="widget_2" native="true">
+           <layout class="QGridLayout" name="gridLayout_16">
+            <item row="0" column="0">
+             <widget class="QGroupBox" name="groupBox_3">
+              <property name="title">
+               <string/>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_2">
+               <item row="0" column="0">
+                <layout class="QGridLayout" name="gridLayout_13">
+                 <item row="0" column="0">
+                  <widget class="QLabel" name="dataFolderLabel_5">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                     <weight>75</weight>
+                     <bold>true</bold>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Ιδιότητες / Attributes:</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="0">
+                  <widget class="QLabel" name="label_14">
+                   <property name="text">
+                    <string>Host</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="0">
+                  <widget class="QLineEdit" name="attr_db_host"/>
+                 </item>
+                 <item row="3" column="0">
+                  <widget class="QLabel" name="label_15">
+                   <property name="text">
+                    <string>Όνομα Βάσης</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="0">
+                  <widget class="QLineEdit" name="attr_db_name">
+                   <property name="text">
+                    <string/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="6" column="0">
+                  <widget class="QGroupBox" name="groupBox_4">
+                   <property name="title">
+                    <string/>
+                   </property>
+                   <layout class="QGridLayout" name="gridLayout_14">
+                    <item row="1" column="0">
+                     <layout class="QGridLayout" name="gridLayout_15">
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label_17">
+                        <property name="text">
+                         <string>Χρήστης</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_18">
+                        <property name="text">
+                         <string>Κωδικός</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="2">
+                       <widget class="QLineEdit" name="attr_db_user"/>
+                      </item>
+                      <item row="1" column="2">
+                       <widget class="QgsPasswordLineEdit" name="attr_db_passw"/>
+                      </item>
+                     </layout>
+                    </item>
+                    <item row="0" column="0">
+                     <widget class="QLabel" name="label_16">
+                      <property name="text">
+                       <string>Διαπιστευτήρια</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
  </widget>
  <customwidgets>
   <customwidget>
@@ -110,40 +319,12 @@
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
   </customwidget>
+  <customwidget>
+   <class>QgsPasswordLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qgspasswordlineedit.h</header>
+  </customwidget>
  </customwidgets>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>SettingsDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>SettingsDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

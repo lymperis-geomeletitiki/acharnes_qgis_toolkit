@@ -172,6 +172,14 @@ class pol_toolkit:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
+        #Main dock window
+        icon = QIcon(os.path.dirname(__file__) + "/icons/main.png")
+        self.mainDock = QAction(icon, "Πολεοδομία Toolkit", self.iface.mainWindow())
+        self.mainDock.triggered.connect(self.run)
+        self.mainDock.setCheckable(False)
+        self.iface.addToolBarIcon(self.mainDock)
+
+
         icon_path = ':/plugins/pol_toolkit/icon.png'
         self.add_action(
             icon_path,
@@ -183,10 +191,17 @@ class pol_toolkit:
 
         #Settings Dialog
         icon = QIcon(os.path.dirname(__file__) + "/icons/settings_gear.png")
-        self.openSettings = QAction(icon, "Select data folder (Geomeletitiki W.A.)", self.iface.mainWindow())
+        self.openSettings = QAction(icon, "Ρυθμίσεις", self.iface.mainWindow())
         self.openSettings.triggered.connect(self.showSettingsDialog)
         self.openSettings.setCheckable(False)
         self.iface.addToolBarIcon(self.openSettings)
+
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Poleodomia Toolkit'),
+            callback=self.showSettingsDialog,
+            parent=self.iface.mainWindow())
+
 
 
 
