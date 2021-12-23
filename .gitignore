@@ -133,3 +133,4 @@ dmypy.json
 
 settings.json
 poleodomia_acharnes.qgz
+*.sql

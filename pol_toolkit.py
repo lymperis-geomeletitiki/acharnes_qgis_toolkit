@@ -249,13 +249,12 @@ class pol_toolkit:
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
+
+
+
+
+
     def openWorkspace(self):
-        #project = QgsProject.instance()
-        #project.read(os.path.dirname(__file__) +
-        #             "/proj/poleodomia_acharnes.qgzs")
-        #for layer in project.mapLayers():
-        #    print(layer)
-        
         self.iface.addProject(os.path.dirname(__file__) + "/proj/poleodomia_acharnes.qgz")
 
     def showSettingsDialog(self):

@@ -23,9 +23,13 @@
 """
 
 import os
+import pyodbc, json
+
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal
+from qgis.core import QgsProject
+from qgis.PyQt.QtWidgets import QTableWidgetItem
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'pol_toolkit_dockwidget_base.ui'))
@@ -34,6 +38,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
+    layer = None
 
     def __init__(self, parent=None):
         """Constructor."""
@@ -43,8 +48,100 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # self.<objectname>, and you can use autoconnect slots - see
         # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
-        self.setupUi(self)
+        self.setupUi(self) 
+
+        self.search_ot_button.clicked.connect(self.search_ot)
+
+        
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
         event.accept()
+
+
+
+    def search_ot(self):
+        #Get the layer OIkodomika Tetragona
+        self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
+        #print(self.layer.dataProvider().dataSourceUri())
+
+
+        #Get search parameters
+        ot_num = self.search_ot_number.text()
+        pe_num = self.search_ot_pe.text()
+
+        # read db connection properties
+        settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'settings.json')
+        with open(settings_path, 'r') as settings_file:
+            settings = json.load(settings_file)
+            host = settings['DB']['Attributes']['host']
+            db= settings['DB']['Attributes']['db']
+            user = settings['DB']['Attributes']['user']
+            passw = settings['DB']['Attributes']['passw']
+        settings_file.close()
+
+        conn = pyodbc.connect("DRIVER={};SERVER={};DATABASE={};UID={};PWD={}".format('ODBC Driver 17 for SQL Server', host.replace('/', "\\"), db, user, passw))
+        #conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')       #may need to specify encoding
+        cursor = conn.cursor()
+        
+        #Find all Praxeis Analogismou which match the specific OT and PE
+        query = "SELECT * FROM [polgeodb].[dbo].[anal] WHERE [analid] IN (SELECT [analid] FROM [polgeodb].[dbo].[analot] WHERE PARSENAME( [otid],3) = '{}' AND PARSENAME( [otid],1)='{}')".format(ot_num, pe_num)
+    
+        cursor.execute(query)
+        row = cursor.fetchall()
+
+        if row:
+            self.fillTable(self.search_ot_results_table, row)
+
+
+
+
+    def fillTable(self,table, items):
+        #Attribute table tab
+     
+        table.clear()
+        table.setRowCount(0)
+        table.setColumnCount(8)
+
+
+
+
+        table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο'])
+        table.horizontalHeader().setVisible(True)
+        
+
+        for result in items:
+            #try:
+            table.insertRow(table.rowCount()) 
+
+            item = QTableWidgetItem(result.analid)
+            table.setItem(table.rowCount()-1, 0, item)
+
+            item = QTableWidgetItem(result.arpraxis)
+            table.setItem(table.rowCount()-1, 1, item)
+
+            item = QTableWidgetItem(str(result.dateprax))
+            table.setItem(table.rowCount()-1, 2, item)
+
+            item = QTableWidgetItem(result.fakel)
+            table.setItem(table.rowCount()-1, 3, item)
+
+            item = QTableWidgetItem(result.address)
+            table.setItem(table.rowCount()-1, 4, item)
+
+            item = QTableWidgetItem(result.arprotkyr)
+            table.setItem(table.rowCount()-1, 5, item)
+
+            item = QTableWidgetItem(str(result.datekyr))
+            table.setItem(table.rowCount()-1, 6, item)
+
+            item = QTableWidgetItem(result.ota)
+            table.setItem(table.rowCount()-1, 7, item)
+
+
+
+
+
+
+            #except:
+            #    continue
