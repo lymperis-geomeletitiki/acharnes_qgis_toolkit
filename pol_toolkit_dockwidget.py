@@ -27,9 +27,11 @@ import pyodbc, json
 
 
 from qgis.PyQt import QtGui, QtWidgets, uic
+from qgis.PyQt import QtCore
 from qgis.PyQt.QtCore import pyqtSignal
 from qgis.core import QgsProject
-from qgis.PyQt.QtWidgets import QTableWidgetItem
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QLabel
+from qgis.PyQt.QtGui import QPixmap
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'pol_toolkit_dockwidget_base.ui'))
@@ -50,6 +52,8 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self) 
 
+
+        self.no_anal.setVisible(False)
         self.search_ot_button.clicked.connect(self.search_ot)
 
         
@@ -91,19 +95,27 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         row = cursor.fetchall()
 
         if row:
-            self.fillTable(self.search_ot_results_table, row)
+            self.fillTable(self.search_ot_anal, row)
+        else:
+            #GUI
+            self.no_anal.setVisible(True)
+            self.search_ot_anal.setEnabled(False)
+            self.search_ot_anal.clear()
 
 
 
 
     def fillTable(self,table, items):
         #Attribute table tab
-     
+
+        #GUI
+        self.no_anal.setVisible(False)
+        self.search_ot_anal.setEnabled(True)
+
+
         table.clear()
         table.setRowCount(0)
-        table.setColumnCount(8)
-
-
+        table.setColumnCount(9)
 
 
         table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο'])
@@ -138,10 +150,29 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             item = QTableWidgetItem(result.ota)
             table.setItem(table.rowCount()-1, 7, item)
 
+            item = QTableWidgetItem('')
+            table.setItem(table.rowCount()-1, 7, item)
+
+            #BUTTON
+            #btn = QPushButton(table)
+            #btn.setText('Σχέδιο')
+            #table.setCellWidget(table.rowCount()-1, 8, btn)
+
+            
+          
+            label = QLabel(table)
+            pixmap = QPixmap(os.path.dirname(__file__) + "/icons/doc_small.png")
+            pixmap.scaled(10,10)
+            label.setPixmap(pixmap)
+            label.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            label.clicked.connect(self.showDocument(result.imagesxed))
 
 
-
+            table.setCellWidget(table.rowCount()-1, 8, label)
 
 
             #except:
             #    continue
+
+    def showDocument(self, document):
+        
