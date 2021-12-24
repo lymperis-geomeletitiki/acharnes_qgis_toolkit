@@ -43,6 +43,7 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     closingPlugin = pyqtSignal()
     openingDocument = pyqtSignal(bytes)
     layer = None
+    selectedFeatures = []
 
     pr_anal_binaries = {"sxedia":[], "txtprx": [], "txtkyr": []}  # a store for binary data contianing images
 
@@ -56,18 +57,18 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # GUI
         self.no_anal.setVisible(False)
         self.selected_label.setVisible(False)
-    
+        self.search_ot__selected.setEnabled(False)
         
-        
+
         self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
         self.layer.selectionChanged.connect(self.ot_selection_changed)
 
 
 
-        self.search_ot_button.clicked.connect(self.search_ot)
-        
- 
+        self.search_ot_button.clicked.connect(self.searchFromText)
+        self.search_ot__selected.clicked.connect(self.searchFromSelection)       
 
+        # Open documents from clicks in the table
         self.search_ot_anal.cellClicked.connect(self.showDocument)
 
 
@@ -78,13 +79,13 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
 
-    def search_ot(self):
-        #Get the layer OIkodomika Tetragona
+
+
+
+    def searchFromText(self):
+        #Get the layer Oikodomika Tetragona
         self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
 
-
-
-        #Get search parameters
         ot_num = self.search_ot_number.text()
         pe_num = self.search_ot_pe.text()
 
@@ -102,8 +103,9 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         #conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')       #may need to specify encoding
         cursor = conn.cursor()
         
+
         #Find all Praxeis Analogismou which match the specific OT and PE
-        query = "SELECT * FROM [polgeodb].[dbo].[anal] WHERE [analid] IN (SELECT [analid] FROM [polgeodb].[dbo].[analot] WHERE PARSENAME( [otid],3) = '{}' AND PARSENAME( [otid],1)='{}')".format(ot_num, pe_num)
+        query = "SELECT * FROM [polgeodb].[dbo].[anal] WHERE [analid] IN (SELECT [analid] FROM [polgeodb].[dbo].[analot] WHERE PARSENAME( [otid],3) = '{}' AND PARSENAME([otid],1) = '{}')".format(ot_num, pe_num)
     
         cursor.execute(query)
         row = cursor.fetchall()
@@ -115,24 +117,74 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.no_anal.setVisible(True)
             self.search_ot_anal.setEnabled(False)
             self.search_ot_anal.clear()
+    
 
 
-
-
-    def fillTable(self,table, items):
-        #GUI
-        self.no_anal.setVisible(False)
-        self.search_ot_anal.setEnabled(True)
-
-
-        table.clear()
-        table.setRowCount(0)
-        table.setColumnCount(11)
-
-
-        table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο', 'Λεκτ. Πράξης', 'Λεκτ. Κύρηξης'])
-        table.horizontalHeader().setVisible(True)
+    def searchFromSelection(self):
         
+        # read db connection properties
+        settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'settings.json')
+        with open(settings_path, 'r') as settings_file:
+            settings = json.load(settings_file)
+            host = settings['DB']['Attributes']['host']
+            db= settings['DB']['Attributes']['db']
+            user = settings['DB']['Attributes']['user']
+            passw = settings['DB']['Attributes']['passw']
+        settings_file.close()
+
+        conn = pyodbc.connect("DRIVER={};SERVER={};DATABASE={};UID={};PWD={}".format('ODBC Driver 17 for SQL Server', host.replace('/', "\\"), db, user, passw))
+        #conn.setdecoding(pyodbc.SQL_WCHAR, encoding='utf-8')       #may need to specify encoding
+        cursor = conn.cursor()
+        
+
+        successes = 0
+        for i in range(0,len(self.selectedFeatures)):
+            feature = self.selectedFeatures[i]
+            ot_num = feature['ot']
+            pe_num = feature['pe']
+
+
+            #Find all Praxeis Analogismou which match the specific OT and PE
+            query = "SELECT * FROM [polgeodb].[dbo].[anal] WHERE [analid] IN (SELECT [analid] FROM [polgeodb].[dbo].[analot] WHERE PARSENAME( [otid],3) = '{}' AND PARSENAME([otid],1) = '{}')".format(ot_num, pe_num)
+
+            cursor.execute(query)
+            row = cursor.fetchall()
+
+            if row:
+                successes+=1
+                if successes == 1:
+                    self.fillTable(self.search_ot_anal, row)
+                else:
+                    self.fillTable(self.search_ot_anal, row, False)
+            elif i ==len(self.selectedFeatures) and successes == 0: #No matching entries found in the db, after searching for all the features
+                #GUI
+                self.no_anal.setVisible(True)
+                self.search_ot_anal.setEnabled(False)
+                self.search_ot_anal.clear()
+
+         
+
+
+
+
+
+
+    def fillTable(self,table, items, firstResult=True):
+        if firstResult == True:
+            #GUI
+            self.no_anal.setVisible(False)
+            self.search_ot_anal.setEnabled(True)
+    
+    
+            table.clear()
+            table.setRowCount(0)
+            table.setColumnCount(11)
+    
+    
+            table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο', 'Λεκτ. Πράξης', 'Λεκτ. Κύρηξης'])
+            table.horizontalHeader().setVisible(True)
+        else:
+            None
         
         for result in items:
             #try:
@@ -156,7 +208,7 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             table.setItem(table.rowCount()-1, 6, item)
             item = QTableWidgetItem(result.ota)
             table.setItem(table.rowCount()-1, 7, item)
-        
+
 
             #Fields containing binary data
 
@@ -193,15 +245,8 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             table.setCellWidget(table.rowCount()-1, 10, label)
 
             self.pr_anal_binaries['txtkyr'].append(result.imagetxtkyr)
-
-
-    
             #except:
             #    continue
-
-
-
-
 
 
     def showDocument(self, row, column):
@@ -213,15 +258,24 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self.openingDocument.emit(self.pr_anal_binaries["txtkyr"][row])
 
 
-
-
     def ot_selection_changed(self, selection):
-        if len(selection) > 1:
-            self.selected_label.setVisible(True)
-            self.selected_label.setText("<font color='Green'>{} επιλεγμένα στοιχεία</font>".format(len(selection)))
-        elif len(selection) == 1:
-            self.selected_label.setVisible(True)
-            self.selected_label.setText("<font color='Green'>1 επιλεγμένο στοιχείο</font>")
-        else:
+        if len(selection) == 0:
             self.selected_label.setVisible(False)
-        
+            self.search_ot__selected.setEnabled(False)
+        else:
+            for feature in self.layer.selectedFeatures():
+                ot = feature['ot_pl_id'].split('.')[0]
+                pe = feature['ot_pl_id'].split('.')[1]
+
+                self.selectedFeatures.append({'ot': ot,'pe':pe})
+
+
+            if len(selection) > 1:
+                self.selected_label.setVisible(True)
+                self.selected_label.setText("<font color='Green'>{} επιλεγμένα στοιχεία</font>".format(len(selection)))
+
+                self.search_ot__selected.setEnabled(True)
+            elif len(selection) == 1:
+                self.selected_label.setVisible(True)
+                self.selected_label.setText("<font color='Green'>1 επιλεγμένο στοιχείο</font>")
+                self.search_ot__selected.setEnabled(True)
