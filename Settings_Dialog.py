@@ -96,6 +96,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
 
        
-        
+    
+    def openFolderDialog(self):
+        None
   
 

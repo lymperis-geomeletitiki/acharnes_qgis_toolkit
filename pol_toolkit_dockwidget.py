@@ -28,10 +28,11 @@ import pyodbc, json
 
 from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt import QtCore
-from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtCore import pyqtSignal, Qt
 from qgis.core import QgsProject
-from qgis.PyQt.QtWidgets import QTableWidgetItem, QLabel
-from qgis.PyQt.QtGui import QPixmap
+from qgis.PyQt.QtWidgets import QTableWidgetItem, QLabel, QPushButton
+from qgis.PyQt.QtGui import QPixmap, QIcon
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'pol_toolkit_dockwidget_base.ui'))
@@ -40,23 +41,36 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
+    openingDocument = pyqtSignal(bytes)
     layer = None
+
+    pr_anal_binaries = {"sxedia":[], "txtprx": [], "txtkyr": []}  # a store for binary data contianing images
+
 
     def __init__(self, parent=None):
         """Constructor."""
         super(pol_toolkitDockWidget, self).__init__(parent)
-        # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://doc.qt.io/qt-5/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
-        self.setupUi(self) 
+        self.setupUi(self) #access UI objects via self.<object>
 
 
+        # GUI
         self.no_anal.setVisible(False)
-        self.search_ot_button.clicked.connect(self.search_ot)
-
+        self.selected_label.setVisible(False)
+    
         
+        
+        self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
+        self.layer.selectionChanged.connect(self.ot_selection_changed)
+
+
+
+        self.search_ot_button.clicked.connect(self.search_ot)
+        
+ 
+
+        self.search_ot_anal.cellClicked.connect(self.showDocument)
+
+
 
     def closeEvent(self, event):
         self.closingPlugin.emit()
@@ -67,7 +81,7 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
     def search_ot(self):
         #Get the layer OIkodomika Tetragona
         self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
-        #print(self.layer.dataProvider().dataSourceUri())
+
 
 
         #Get search parameters
@@ -106,8 +120,6 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
     def fillTable(self,table, items):
-        #Attribute table tab
-
         #GUI
         self.no_anal.setVisible(False)
         self.search_ot_anal.setEnabled(True)
@@ -115,64 +127,101 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         table.clear()
         table.setRowCount(0)
-        table.setColumnCount(9)
+        table.setColumnCount(11)
 
 
-        table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο'])
+        table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο', 'Λεκτ. Πράξης', 'Λεκτ. Κύρηξης'])
         table.horizontalHeader().setVisible(True)
         
-
+        
         for result in items:
             #try:
+            #Add a new row to the table
             table.insertRow(table.rowCount()) 
 
+            #For every item in the database response, put the item in the respective column
             item = QTableWidgetItem(result.analid)
             table.setItem(table.rowCount()-1, 0, item)
-
             item = QTableWidgetItem(result.arpraxis)
             table.setItem(table.rowCount()-1, 1, item)
-
             item = QTableWidgetItem(str(result.dateprax))
             table.setItem(table.rowCount()-1, 2, item)
-
             item = QTableWidgetItem(result.fakel)
             table.setItem(table.rowCount()-1, 3, item)
-
             item = QTableWidgetItem(result.address)
             table.setItem(table.rowCount()-1, 4, item)
-
             item = QTableWidgetItem(result.arprotkyr)
             table.setItem(table.rowCount()-1, 5, item)
-
             item = QTableWidgetItem(str(result.datekyr))
             table.setItem(table.rowCount()-1, 6, item)
-
             item = QTableWidgetItem(result.ota)
             table.setItem(table.rowCount()-1, 7, item)
+        
 
-            item = QTableWidgetItem('')
-            table.setItem(table.rowCount()-1, 7, item)
+            #Fields containing binary data
 
-            #BUTTON
-            #btn = QPushButton(table)
-            #btn.setText('Σχέδιο')
-            #table.setCellWidget(table.rowCount()-1, 8, btn)
-
-            
-          
-            label = QLabel(table)
-            pixmap = QPixmap(os.path.dirname(__file__) + "/icons/doc_small.png")
+            # 1. imagesxed
+            pixmap = QPixmap(os.path.dirname(__file__) + "/icons/blueprint_small.png")
             pixmap.scaled(10,10)
+            label = QLabel(table)
+            label.setAlignment(Qt.AlignCenter)
             label.setPixmap(pixmap)
             label.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-            label.clicked.connect(self.showDocument(result.imagesxed))
-
-
             table.setCellWidget(table.rowCount()-1, 8, label)
 
+            self.pr_anal_binaries['sxedia'].append(result.imagesxed)
 
+            # 2. imagetxtprx
+            pixmap = QPixmap(os.path.dirname(__file__) + "/icons/doc_small.png")
+            pixmap.scaled(10,10)
+            label = QLabel(table)
+            label.setPixmap(pixmap)
+            label.setAlignment(Qt.AlignCenter)
+            label.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            table.setCellWidget(table.rowCount()-1, 9, label)
+
+            self.pr_anal_binaries['txtprx'].append(result.imagetxtprx)
+
+
+            # 3. imagetxtkyr
+            pixmap = QPixmap(os.path.dirname(__file__) + "/icons/doc_small.png")
+            pixmap.scaled(10,10)
+            label = QLabel(table)
+            label.setPixmap(pixmap)
+            label.setAlignment(Qt.AlignCenter)
+            label.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            table.setCellWidget(table.rowCount()-1, 10, label)
+
+            self.pr_anal_binaries['txtkyr'].append(result.imagetxtkyr)
+
+
+    
             #except:
             #    continue
 
-    def showDocument(self, document):
+
+
+
+
+
+    def showDocument(self, row, column):
+        if column == 8:
+            self.openingDocument.emit(self.pr_anal_binaries["sxedia"][row])
+        elif column == 9:
+            self.openingDocument.emit(self.pr_anal_binaries["txtprx"][row])
+        elif column == 10:
+            self.openingDocument.emit(self.pr_anal_binaries["txtkyr"][row])
+
+
+
+
+    def ot_selection_changed(self, selection):
+        if len(selection) > 1:
+            self.selected_label.setVisible(True)
+            self.selected_label.setText("<font color='Green'>{} επιλεγμένα στοιχεία</font>".format(len(selection)))
+        elif len(selection) == 1:
+            self.selected_label.setVisible(True)
+            self.selected_label.setText("<font color='Green'>1 επιλεγμένο στοιχείο</font>")
+        else:
+            self.selected_label.setVisible(False)
         

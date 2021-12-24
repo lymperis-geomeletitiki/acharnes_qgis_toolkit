@@ -39,6 +39,8 @@ cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 if cmd_folder not in sys.path:
     sys.path.insert(0, cmd_folder)
 
+settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'settings.json')
+
 
 class pol_toolkit:
     """QGIS Plugin Implementation."""
@@ -166,7 +168,7 @@ class pol_toolkit:
         self.dockwidget = None
 
         self.settingsDialog = None
-
+  
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -232,22 +234,21 @@ class pol_toolkit:
         if not self.pluginIsActive:
             self.pluginIsActive = True
 
-            # print "** STARTING pol_toolkit"
-
-            # dockwidget may not exist if:
-            #    first run of plugin
-            #    removed on close (see self.onClosePlugin method)
             if self.dockwidget == None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = pol_toolkitDockWidget()
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
+            self.dockwidget.openingDocument.connect(self.showDocument)
 
-            # show the dockwidget
-            # TODO: fix to allow choice of dock location
             self.iface.addDockWidget(Qt.RightDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
+
+
+
+
+
 
 
 
@@ -257,8 +258,38 @@ class pol_toolkit:
     def openWorkspace(self):
         self.iface.addProject(os.path.dirname(__file__) + "/proj/poleodomia_acharnes.qgz")
 
+
+
     def showSettingsDialog(self):
         if not self.settingsDialog:
             from .Settings_Dialog import SettingsDialog
             self.settingsDialog = SettingsDialog(self.iface)
         self.settingsDialog.show()
+
+
+
+    def showDocument(self, document):       #Show the content of a document, accepting a QtSignal containing bytecode from the main DockWindow
+        try:
+            from PIL import Image
+            import io
+
+            image_data = document # byte values of the image
+            image = Image.open(io.BytesIO(image_data))
+            image.show()
+        except:   #If the bytes are NOT an image:
+            
+            # 1. Open settings and read folder path
+            import json
+            with open(settings_path, 'r') as settings_file:
+                settings = json.load(settings_file)
+                folder = settings['working folder']
+
+            # 2. write the bytes to a pdf
+            with open(folder + 'code.pdf', 'wb') as file:
+                file.write(document)
+            file.close()
+
+            import subprocess
+            path = folder + 'code.pdf'
+            subprocess.Popen([path], shell=True)        
+    
