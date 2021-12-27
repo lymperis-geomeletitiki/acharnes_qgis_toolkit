@@ -71,6 +71,10 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # Open documents from clicks in the table
         self.search_ot_anal.cellClicked.connect(self.showDocument)
 
+        
+        PE = ['0502801 (ΚΕΝΤΡΙΚΟ ΜΕΝΙΔΙ)','0502802 (ΑΓΙΟΣ ΑΘΑΝΑΣΙΟΣ)','0502803 (ΑΓΙΟΣ ΠΕΤΡΟΣ Α)','0502804 (ΜΕΣΟΝΥΧΙ)','0502805 (ΑΓΙΟΣ ΠΕΤΡΟΣ Β)','0502806 (ΛΑΘΕΑ Α)','0502807 (ΑΓΙΟΣ ΠΕΤΡΟΣ Γ)','0502808 (ΑΓΡΙΛΕΖΑ)','0502809 (ΒΙΟΠΑ)','0502810 (ΧΑΡΑΥΓΗ Β)','0502811 (ΧΑΜΟΜΗΛΟΣ Α)','0502812 (ΧΑΡΑΥΓΗ Α)','0502813 (ΝΕΑΠΟΛΗ)','0502814 (ΛΑΘΕΑ Β)','0502815 (ΓΕΡΟΒΟΥΝΟ - ΑΓ. ΑΝΝΑ)','0502816 (ΛΥΚΟΤΡΥΠΑ)','0502817 (ΑΓ. ΔΗΜΗΤΡΙΟΣ - ΠΥΡΓΟΥΘΙ)','0502818 (ΑΓΙΑ ΠΑΡΑΣΚΕΥΗ)','0502819 (ΑΥΛΙΖΑ)','0502820 (ΜΠΟΣΚΙΖΑ)','0502821 (ΜΕΓΑΛΑ ΣΧΟΙΝΑ Α)','0502822 (ΟΛΥΜΠΙΑΚΟ ΧΩΡΙΟ)','0502823 (ΒΙΠΑ)','0502825 (ΒΑΡΥΜΠΟΜΠΗ)']
+        self.search_ot_pe.clear()
+        self.search_ot_pe.addItems(PE)
 
 
     def closeEvent(self, event):
@@ -87,7 +91,12 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.layer = QgsProject.instance().mapLayersByName('Οικοδομικά Τετράγωνα')[0]
 
         ot_num = self.search_ot_number.text()
-        pe_num = self.search_ot_pe.text()
+        pe_num = str(self.search_ot_pe.currentText()).split(' ')[0]
+        
+        if ot_num == '' or ot_num ==' ':
+            ot_num ="*"
+
+        print(ot_num)
 
         # read db connection properties
         settings_path = os.path.join(os.path.dirname(__file__), 'settings', 'settings.json')
@@ -156,11 +165,13 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                     self.fillTable(self.search_ot_anal, row)
                 else:
                     self.fillTable(self.search_ot_anal, row, False)
-            elif i ==len(self.selectedFeatures) and successes == 0: #No matching entries found in the db, after searching for all the features
-                #GUI
-                self.no_anal.setVisible(True)
-                self.search_ot_anal.setEnabled(False)
-                self.search_ot_anal.clear()
+        if successes == 0: #No matching entries found in the db, after searching for all the features
+            #GUI
+            self.search_ot_anal.clear()
+            self.search_ot_anal.setRowCount(0)
+            self.no_anal.setVisible(True)
+            self.search_ot_anal.setEnabled(False)
+            self.search_ot_anal.clear()
 
          
 
@@ -170,16 +181,15 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
     def fillTable(self,table, items, firstResult=True):
+        #Applies when multiple OT are searched, probably in different PE
         if firstResult == True:
             #GUI
             self.no_anal.setVisible(False)
             self.search_ot_anal.setEnabled(True)
     
-    
             table.clear()
             table.setRowCount(0)
             table.setColumnCount(11)
-    
     
             table.setHorizontalHeaderLabels(['ID','Αρ. Πράξης', 'Ημ/νια', 'Φάκελος', 'Διεύθυνση', 'Αρ. Πρωτοκ. Κύρωσης', 'Ημ/νια Κύρωσης', 'ΟΤΑ', 'Σχέδιο', 'Λεκτ. Πράξης', 'Λεκτ. Κύρηξης'])
             table.horizontalHeader().setVisible(True)
@@ -259,6 +269,7 @@ class pol_toolkitDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
 
     def ot_selection_changed(self, selection):
+        self.selectedFeatures = []
         if len(selection) == 0:
             self.selected_label.setVisible(False)
             self.search_ot__selected.setEnabled(False)

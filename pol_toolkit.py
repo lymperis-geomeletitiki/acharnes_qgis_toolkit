@@ -280,16 +280,18 @@ class pol_toolkit:
             
             # 1. Open settings and read folder path
             import json
+            import random
             with open(settings_path, 'r') as settings_file:
                 settings = json.load(settings_file)
                 folder = settings['working folder']
 
             # 2. write the bytes to a pdf
-            with open(folder + 'code.pdf', 'wb') as file:
+            filename = 'code_{}.pdf'.format(str(random. randint(0,100000)))    #TODO: replace this with something related to the actual filename
+            with open(folder + filename, 'wb') as file:
                 file.write(document)
             file.close()
 
             import subprocess
-            path = folder + 'code.pdf'
+            path = folder + filename
             subprocess.Popen([path], shell=True)        
     
